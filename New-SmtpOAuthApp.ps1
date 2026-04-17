@@ -397,15 +397,13 @@ Invoke-Step -Name "Org SMTP AUTH check" -ContinueOnError -Action {
     $val       = $transport.SmtpClientAuthenticationDisabled
 
     if ($val -eq $true) {
-        Write-Warn ("Organisation-level SMTP AUTH is GLOBALLY DISABLED. " +
-                    "Per-mailbox enablement will have no effect.")
-        Write-Warn ("Fix: Set-TransportConfig " +
-                    "-SmtpClientAuthenticationDisabled `$false")
+        Write-Info ("Organisation-level SMTP AUTH is globally disabled, " +
+                    "but per-mailbox enablement (SmtpClientAuthenticationDisabled = `$false) " +
+                    "overrides this for individual mailboxes. No org-level change required.")
         $script:config.OrgSmtpAuthDisabled = $true
     }
     else {
-        Write-Info ("Org-level SMTP AUTH not globally disabled " +
-                    "(value: $val). Per-mailbox settings will take effect.")
+        Write-Info ("Org-level SMTP AUTH setting: $val.")
         $script:config.OrgSmtpAuthDisabled = $false
     }
 }
@@ -845,13 +843,6 @@ Write-Host ""
 Write-Host "  SMTP AUTH status:"
 foreach ($addr in $script:config.SmtpAuthResults.Keys) {
     Write-Host ("    {0,-45} {1}" -f $addr, $script:config.SmtpAuthResults[$addr])
-}
-if ($script:config.OrgSmtpAuthDisabled -eq $true) {
-    Write-Host ""
-    Write-Host "  ⚠  ORG-LEVEL SMTP AUTH IS GLOBALLY DISABLED" -ForegroundColor Red
-    Write-Host ("     Run: Set-TransportConfig " +
-                "-SmtpClientAuthenticationDisabled `$false") `
-        -ForegroundColor Yellow
 }
 Write-Host ""
 Write-Host "  Next step: Run Test-SmtpOAuthApp.ps1 to validate."

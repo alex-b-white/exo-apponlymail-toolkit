@@ -510,16 +510,18 @@ catch {
 
 Write-Section "Organisation-level SMTP AUTH"
 
-Invoke-TestBlock -Name "Org SMTP AUTH not globally disabled" -Test {
+Invoke-TestBlock -Name "Org SMTP AUTH setting (informational)" -Test {
     $transport = Get-TransportConfig -ErrorAction Stop
     $val       = $transport.SmtpClientAuthenticationDisabled
     if ($val -eq $true) {
-        throw ("SmtpClientAuthenticationDisabled = True at org level. " +
-               "Fix: Set-TransportConfig " +
-               "-SmtpClientAuthenticationDisabled `$false")
+        Write-TestResult -TestName "Org SMTP AUTH globally disabled" -Result "INFO" `
+            -Detail ("Org-level SMTP AUTH is disabled, but per-mailbox override " +
+                     "(SmtpClientAuthenticationDisabled = `$false) takes precedence. " +
+                     "No action required.")
     }
-    "SmtpClientAuthenticationDisabled = $val."
+    "SmtpClientAuthenticationDisabled = $val (per-mailbox settings apply regardless)."
 }
+
 
 Write-Section "Per-mailbox SMTP AUTH settings"
 

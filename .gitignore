@@ -1,2 +1,4 @@
 # Ignore all files ending with -config.json
 *-config.json
+# Ignore all certificate files
+*.cer

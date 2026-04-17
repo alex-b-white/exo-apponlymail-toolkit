@@ -220,7 +220,7 @@ Validates the full `SMTP.SendAsApp` flow end-to-end.
 
 | Category | Tests |
 |---|---|
-| **Prerequisites** | Org-level SMTP AUTH not globally disabled; per-mailbox SMTP AUTH enabled; EXO service principal registered; `FullAccess` and `SendAs` permissions per mailbox |
+| **Prerequisites** | Per-mailbox SMTP AUTH enabled; EXO service principal registered; `FullAccess` and `SendAs` permissions per mailbox |
 | **Token** | Client credentials token acquisition; `aud` claim = `https://outlook.office365.com`; `SMTP.SendAsApp` in `roles` claim; token not expired |
 | **SMTP (per mailbox)** | TCP connect to `smtp.office365.com:587`; STARTTLS negotiation; EHLO — XOAUTH2 advertised; `AUTH XOAUTH2` → 235 success; optional full message send → 250 End-of-DATA |
 

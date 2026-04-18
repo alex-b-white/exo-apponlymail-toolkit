@@ -237,8 +237,8 @@ Write-Host ("═" * 70) -ForegroundColor DarkCyan
 
 $ScopeName       = "$AppName-Scope"
 $MESGName        = "$AppName-MESG"
-$CustomAttribute = "CustomAttribute1"   # overridden from config below if present
-$AttrValue       = $AppName             # overridden from config below if present
+$CustomAttribute = $null    # overridden from config below if present
+$AttrValue       = $AppName # overridden from config below if present
 
 #endregion
 
@@ -294,30 +294,47 @@ if (-not $SkipApiTests) {
 
 #endregion
 
+#region ── Validate Required Values ───────────────────────────────────────────
+
+$script:MissingValues = @()
+
+if ([string]::IsNullOrWhiteSpace($CustomAttribute)) { $script:MissingValues += 'CustomAttribute' }
+if ([string]::IsNullOrWhiteSpace($AttrValue))        { $script:MissingValues += 'AttributeValue'  }
+
+if ($script:MissingValues.Count -gt 0) {
+  Write-TestResult -TestName "Required value validation" -Result "FAIL" `
+  -Detail ("The following required values are missing: " +
+    ($script:MissingValues -join ', ') + ". " +
+  "Ensure they are present in the config file or passed as parameters.")
+  exit 1
+}
+
+#endregion
+
 #region ── Connect to Exchange Online ──────────────────────────────────────────
 
 Write-Section "Connecting to Exchange Online"
 
 try {
-    $null = Get-OrganizationConfig -ErrorAction Stop
-    Write-TestResult -TestName "Exchange Online session" -Result "PASS" `
-    -Detail "Already connected."
+  $null = Get-OrganizationConfig -ErrorAction Stop
+  Write-TestResult -TestName "Exchange Online session" -Result "PASS" `
+  -Detail "Already connected."
 }
 catch {
-    try {
-        Import-Module ExchangeOnlineManagement `
-            -RequiredVersion $script:RequiredExoVersion `
-            -ErrorAction Stop
+  try {
+    Import-Module ExchangeOnlineManagement `
+    -RequiredVersion $script:RequiredExoVersion `
+    -ErrorAction Stop
 
-        Connect-ExchangeOnline -ShowBanner:$false -ErrorAction Stop
-        $null = Get-OrganizationConfig -ErrorAction Stop
-        Write-TestResult -TestName "Exchange Online session" -Result "PASS" `
-        -Detail "Connected successfully."
-    }
-    catch {
-        Write-TestResult -TestName "Exchange Online session" -Result "FAIL" -Detail $_
-        exit 1
-    }
+    Connect-ExchangeOnline -ShowBanner:$false -ErrorAction Stop
+    $null = Get-OrganizationConfig -ErrorAction Stop
+    Write-TestResult -TestName "Exchange Online session" -Result "PASS" `
+    -Detail "Connected successfully."
+  }
+  catch {
+    Write-TestResult -TestName "Exchange Online session" -Result "FAIL" -Detail $_
+    exit 1
+  }
 }
 
 #endregion
@@ -814,57 +831,57 @@ Write-Host ("  ⚠  Warned  : {0,3}" -f $script:TestsWarned.Count) -ForegroundCo
 
 # ── Per-category breakdown ──────────────────────────────────────────────────
 $categories = [ordered]@{
-    "RBAC"       = @{
-        Passed = $script:TestsPassed | Where-Object { $_ -match "^(Scope|Role|EXO|MESG|Attribute|In-scope|Out-of-scope attr)" }
-        Failed = $script:TestsFailed | Where-Object { $_ -match "^(Scope|Role|EXO|MESG|Attribute|In-scope|Out-of-scope attr)" }
-        Warned = $script:TestsWarned | Where-Object { $_ -match "^(Scope|Role|EXO|MESG|Attribute|In-scope|Out-of-scope attr)" }
-    }
-    "Graph API"  = @{
-        Passed = $script:TestsPassed | Where-Object { $_ -match "^(Read mail|Send mail|Read denied|Send denied|Acquire access token)" }
-        Failed = $script:TestsFailed | Where-Object { $_ -match "^(Read mail|Send mail|Read denied|Send denied|Acquire access token)" }
-        Warned = $script:TestsWarned | Where-Object { $_ -match "^(Read mail|Send mail|Read denied|Send denied|Acquire access token)" }
-    }
+  "RBAC"       = @{
+    Passed = $script:TestsPassed | Where-Object { $_ -match "^(Scope|Role|EXO|MESG|Attribute|In-scope|Out-of-scope attr)" }
+    Failed = $script:TestsFailed | Where-Object { $_ -match "^(Scope|Role|EXO|MESG|Attribute|In-scope|Out-of-scope attr)" }
+    Warned = $script:TestsWarned | Where-Object { $_ -match "^(Scope|Role|EXO|MESG|Attribute|In-scope|Out-of-scope attr)" }
+  }
+  "Graph API"  = @{
+    Passed = $script:TestsPassed | Where-Object { $_ -match "^(Read mail|Send mail|Read denied|Send denied|Acquire access token)" }
+    Failed = $script:TestsFailed | Where-Object { $_ -match "^(Read mail|Send mail|Read denied|Send denied|Acquire access token)" }
+    Warned = $script:TestsWarned | Where-Object { $_ -match "^(Read mail|Send mail|Read denied|Send denied|Acquire access token)" }
+  }
 }
 
 Write-Host ""
 Write-Host "  Breakdown by category:" -ForegroundColor White
 Write-Host ("  {0,-12} {1,8} {2,8} {3,8}" -f "Category", "Passed", "Failed", "Warned") `
-    -ForegroundColor DarkGray
+-ForegroundColor DarkGray
 Write-Host ("  {0,-12} {1,8} {2,8} {3,8}" -f "────────────", "──────", "──────", "──────") `
-    -ForegroundColor DarkGray
+-ForegroundColor DarkGray
 
 foreach ($cat in $categories.Keys) {
-    $p = @($categories[$cat].Passed).Count
-    $f = @($categories[$cat].Failed).Count
-    $w = @($categories[$cat].Warned).Count
+  $p = @($categories[$cat].Passed).Count
+  $f = @($categories[$cat].Failed).Count
+  $w = @($categories[$cat].Warned).Count
 
-    $rowColor = if     ($f -gt 0) { "Red"     }
-                elseif ($w -gt 0) { "Yellow"  }
-                elseif ($p -gt 0) { "Green"   }
-                else              { "DarkGray" }
+  $rowColor = if     ($f -gt 0) { "Red"     }
+  elseif ($w -gt 0) { "Yellow"  }
+  elseif ($p -gt 0) { "Green"   }
+  else              { "DarkGray" }
 
-    $skipped  = if ($p -eq 0 -and $f -eq 0 -and $w -eq 0) { " (skipped)" } else { "" }
+  $skipped  = if ($p -eq 0 -and $f -eq 0 -and $w -eq 0) { " (skipped)" } else { "" }
 
-    Write-Host ("  {0,-12} {1,8} {2,8} {3,8}{4}" -f $cat, $p, $f, $w, $skipped) `
-        -ForegroundColor $rowColor
+  Write-Host ("  {0,-12} {1,8} {2,8} {3,8}{4}" -f $cat, $p, $f, $w, $skipped) `
+  -ForegroundColor $rowColor
 }
 
 # ── Failed test detail ──────────────────────────────────────────────────────
 if ($script:TestsFailed.Count -gt 0) {
-    Write-Host ""
-    Write-Host "  Failed tests:" -ForegroundColor Red
-    $script:TestsFailed | ForEach-Object {
-        Write-Host "    • $_" -ForegroundColor Red
-    }
+  Write-Host ""
+  Write-Host "  Failed tests:" -ForegroundColor Red
+  $script:TestsFailed | ForEach-Object {
+    Write-Host "    • $_" -ForegroundColor Red
+  }
 }
 
 # ── Warning detail ──────────────────────────────────────────────────────────
 if ($script:TestsWarned.Count -gt 0) {
-    Write-Host ""
-    Write-Host "  Warnings:" -ForegroundColor Yellow
-    $script:TestsWarned | ForEach-Object {
-        Write-Host "    • $_" -ForegroundColor Yellow
-    }
+  Write-Host ""
+  Write-Host "  Warnings:" -ForegroundColor Yellow
+  $script:TestsWarned | ForEach-Object {
+    Write-Host "    • $_" -ForegroundColor Yellow
+  }
 }
 
 # ── Overall verdict ─────────────────────────────────────────────────────────
@@ -872,7 +889,7 @@ Write-Host ""
 Write-Host ("═" * 70) -ForegroundColor DarkGray
 
 if ($script:TestsFailed.Count -eq 0 -and $script:TestsWarned.Count -eq 0) {
-    Write-Host "  ✔  ALL TESTS PASSED" -ForegroundColor Green
+  Write-Host "  ✔  ALL TESTS PASSED" -ForegroundColor Green
 }
 elseif ($script:TestsFailed.Count -eq 0) {
     Write-Host "  ⚠  ALL TESTS PASSED WITH WARNINGS" -ForegroundColor Yellow

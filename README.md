@@ -1,4 +1,4 @@
-# Exchange Online App-Only Mail Access — PowerShell Toolkit
+﻿# Exchange Online App-Only Mail Access – PowerShell Toolkit
 
 Automate the creation and validation of **scoped, app-only** Exchange Online mailbox access using Entra ID app registrations. Covers both the **Microsoft Graph API** (scoped RBAC) and **SMTP OAuth2** (`SMTP.SendAsApp`) flows.
 
@@ -23,14 +23,14 @@ Requires **PowerShell 5.1** or later.
 
 ### Module Installation
 
-> **⚠️ Important — Module Compatibility**
+> **⚠️ Important – Module Compatibility**
 >
-> `ExchangeOnlineManagement` 3.8+ and `Microsoft.Graph` 2.25+ **cannot coexist in the same PowerShell session** due to a WAM/MSAL broker DLL conflict ([msgraph-sdk-powershell #3576](https://github.com/microsoftgraph/msgraph-sdk-powershell/issues/3576)). Install the last known-good versions below. This is a **side-by-side install** — your existing module versions are not removed.
+> `ExchangeOnlineManagement` 3.8+ and `Microsoft.Graph` 2.25+ **cannot coexist in the same PowerShell session** due to a WAM/MSAL broker DLL conflict ([msgraph-sdk-powershell #3576](https://github.com/microsoftgraph/msgraph-sdk-powershell/issues/3576)). Install the last known-good versions below. This is a **side-by-side install** – your existing module versions are not removed.
 
 ```powershell
 # Install the last compatible versions not affected by Graph SDK PowerShell issue #3576
 # (https://github.com/microsoftgraph/msgraph-sdk-powershell/issues/3576)
-# Side-by-side install — does not remove your existing versions
+# Side-by-side install – does not remove your existing versions
 Install-Module ExchangeOnlineManagement `
     -RequiredVersion 3.7.0 `
     -Scope CurrentUser `
@@ -104,11 +104,11 @@ Creates an Entra ID app registration with **Graph API** mailbox access scoped to
 
 | Parameter | Required | Default | Description |
 |---|---|---|---|
-| `-AppName` | ✅ | — | Display name for the app and associated resources |
-| `-Mailboxes` | ✅ | — | Array of mailbox SMTP addresses to scope access to |
+| `-AppName` | ✅ | – | Display name for the app and associated resources |
+| `-Mailboxes` | ✅ | – | Array of mailbox SMTP addresses to scope access to |
 | `-UseCertificate` | ❌ | `$false` | Create a self-signed certificate instead of a client secret |
-| `-CustomAttribute` | ❌ | `CustomAttribute15` | Mailbox custom attribute (1–15) used for scope filtering |
-| `-ExpiryMonths` | ❌ | `12` | Client secret validity period in months (1-24)|
+| `-CustomAttribute` | ❌* | - | Mailbox custom attribute (1–15) used for scope filtering (*required if not set in `preferences.json`) |
+| `-ExpiryMonths` | ❌ | `12` | Client secret validity period in months (1-24) |
 | `-OutputPath` | ❌ | Current directory | Directory for the config JSON and certificate file |
 
 ---
@@ -136,7 +136,7 @@ Validates the configuration created by `New-ScopedMailboxApp.ps1` and runs live 
     -ConfigFile        ".\MailApp-HR-config.json" `
     -OutOfScopeMailbox "finance@contoso.com"
 
-# RBAC checks only — skip live API calls
+# RBAC checks only – skip live API calls
 .\Test-ScopedMailboxApp.ps1 `
     -AppName      "MailApp-HR" `
     -Mailboxes    @("hr@contoso.com") `
@@ -148,14 +148,14 @@ Validates the configuration created by `New-ScopedMailboxApp.ps1` and runs live 
 
 | Parameter | Required | Default | Description |
 |---|---|---|---|
-| `-AppName` | ✅ | — | Display name of the app registration to test |
-| `-Mailboxes` | ✅ | — | In-scope mailbox addresses to test |
-| `-ConfigFile` | ❌ | — | Path to JSON config from `New-ScopedMailboxApp.ps1`; auto-populates credentials |
-| `-TenantId` | ❌* | — | Entra ID tenant ID (*required if no `-ConfigFile`) |
-| `-AppId` | ❌* | — | Application client ID (*required if no `-ConfigFile`) |
-| `-ClientSecret` | ❌* | — | Client secret (*required if no `-ConfigFile` and not using cert) |
-| `-CertThumbprint` | ❌* | — | Certificate thumbprint (*required if no `-ConfigFile` and using cert) |
-| `-OutOfScopeMailbox` | ❌ | — | A real EXO mailbox **not** in scope — used to verify access is denied |
+| `-AppName` | ✅ | – | Display name of the app registration to test |
+| `-Mailboxes` | ✅ | – | In-scope mailbox addresses to test |
+| `-ConfigFile` | ❌ | – | Path to JSON config from `New-ScopedMailboxApp.ps1`; auto-populates credentials |
+| `-TenantId` | ❌* | – | Entra ID tenant ID (*required if no `-ConfigFile`) |
+| `-AppId` | ❌* | – | Application client ID (*required if no `-ConfigFile`) |
+| `-ClientSecret` | ❌* | – | Client secret (*required if no `-ConfigFile` and not using cert) |
+| `-CertThumbprint` | ❌* | – | Certificate thumbprint (*required if no `-ConfigFile` and using cert) |
+| `-OutOfScopeMailbox` | ❌ | – | A real EXO mailbox **not** in scope – used to verify access is denied |
 | `-SkipApiTests` | ❌ | `$false` | Run RBAC checks only; skip live Graph API calls |
 | `-TestRecipient` | ❌ | Sending mailbox | Recipient for test messages (defaults to loop-back) |
 
@@ -170,7 +170,7 @@ Creates an Entra ID app registration for **app-only SMTP OAuth2 sending** via Ex
 **What it does:**
 
 1. Creates an Entra ID app registration and service principal
-2. Adds the `SMTP.SendAsApp` **application** permission on the Office 365 Exchange Online resource (`00000002-0000-0ff1-ce00-000000000000`) — **not** Microsoft Graph
+2. Adds the `SMTP.SendAsApp` **application** permission on the Office 365 Exchange Online resource (`00000002-0000-0ff1-ce00-000000000000`) – **not** Microsoft Graph
 3. Grants admin consent via `New-MgServicePrincipalAppRoleAssignment`
 4. Creates a client secret or self-signed certificate
 5. Registers the service principal in Exchange Online
@@ -204,8 +204,8 @@ Creates an Entra ID app registration for **app-only SMTP OAuth2 sending** via Ex
 
 | Parameter | Required | Default | Description |
 |---|---|---|---|
-| `-AppName` | ✅ | — | Display name for the app registration |
-| `-Mailboxes` | ✅ | — | SMTP addresses of mailboxes the app will send as (shared mailboxes supported) |
+| `-AppName` | ✅ | – | Display name for the app registration |
+| `-Mailboxes` | ✅ | – | SMTP addresses of mailboxes the app will send as (shared mailboxes supported) |
 | `-UseCertificate` | ❌ | `$false` | Create a self-signed certificate instead of a client secret |
 | `-ExpiryMonths` | ❌ | `12` | Client secret validity period in months (1-24) |
 | `-OutputPath` | ❌ | Current directory | Directory for the config JSON and certificate file |
@@ -222,7 +222,7 @@ Validates the full `SMTP.SendAsApp` flow end-to-end.
 |---|---|
 | **Prerequisites** | Per-mailbox SMTP AUTH enabled; EXO service principal registered; `FullAccess` and `SendAs` permissions per mailbox |
 | **Token** | Client credentials token acquisition; `aud` claim = `https://outlook.office365.com`; `SMTP.SendAsApp` in `roles` claim; token not expired |
-| **SMTP (per mailbox)** | TCP connect to `smtp.office365.com:587`; STARTTLS negotiation; EHLO — XOAUTH2 advertised; `AUTH XOAUTH2` → 235 success; optional full message send → 250 End-of-DATA |
+| **SMTP (per mailbox)** | TCP connect to `smtp.office365.com:587`; STARTTLS negotiation; EHLO – XOAUTH2 advertised; `AUTH XOAUTH2` → 235 success; optional full message send → 250 End-of-DATA |
 
 **Usage:**
 
@@ -235,7 +235,7 @@ Validates the full `SMTP.SendAsApp` flow end-to-end.
     -ConfigFile    ".\SmtpMailer-HR-smtp-config.json" `
     -TestRecipient "admin@contoso.com"
 
-# Auth validation only — do not send a message
+# Auth validation only – do not send a message
 .\Test-SmtpOAuthApp.ps1 `
     -ConfigFile   ".\SmtpMailer-HR-smtp-config.json" `
     -SkipSmtpSend
@@ -245,13 +245,13 @@ Validates the full `SMTP.SendAsApp` flow end-to-end.
 
 | Parameter | Required | Default | Description |
 |---|---|---|---|
-| `-ConfigFile` | ❌* | — | Path to JSON config from `New-SmtpOAuthApp.ps1` (*recommended) |
-| `-TenantId` | ❌* | — | Tenant ID (*required if no `-ConfigFile`) |
-| `-AppId` | ❌* | — | Application client ID (*required if no `-ConfigFile`) |
-| `-ClientSecret` | ❌* | — | Client secret (*required if no `-ConfigFile` and not using cert) |
-| `-CertThumbprint` | ❌* | — | Certificate thumbprint (*required if no `-ConfigFile` and using cert) |
-| `-Mailboxes` | ❌* | — | Mailbox addresses to test (*required if no `-ConfigFile`) |
-| `-SkipSmtpSend` | ❌ | `$false` | Validate token and auth only — do not send a test message |
+| `-ConfigFile` | ❌* | – | Path to JSON config from `New-SmtpOAuthApp.ps1` (*recommended) |
+| `-TenantId` | ❌* | – | Tenant ID (*required if no `-ConfigFile`) |
+| `-AppId` | ❌* | – | Application client ID (*required if no `-ConfigFile`) |
+| `-ClientSecret` | ❌* | – | Client secret (*required if no `-ConfigFile` and not using cert) |
+| `-CertThumbprint` | ❌* | – | Certificate thumbprint (*required if no `-ConfigFile` and using cert) |
+| `-Mailboxes` | ❌* | – | Mailbox addresses to test (*required if no `-ConfigFile`) |
+| `-SkipSmtpSend` | ❌ | `$false` | Validate token and auth only – do not send a test message |
 | `-TestRecipient` | ❌ | Sending mailbox | Recipient for test messages |
 | `-TimeoutMs` | ❌ | `30000` | TCP connection timeout in milliseconds (5000–120000) |
 
@@ -309,10 +309,37 @@ Both provisioning scripts write a JSON configuration file to the output director
 
 | File | Contents |
 |---|---|
-| `<AppName>-config.json` | App ID, tenant ID, credential, custom attribute, scope name, MESG name — for Graph API flow |
-| `<AppName>-smtp-config.json` | App ID, tenant ID, credential, EXO SP identity, SMTP host/port, per-mailbox permission results — for SMTP flow |
+| `<AppName>-config.json` | App ID, tenant ID, credential, custom attribute, scope name, MESG name – for Graph API flow |
+| `<AppName>-smtp-config.json` | App ID, tenant ID, credential, EXO SP identity, SMTP host/port, per-mailbox permission results – for SMTP flow |
+| `<AppName>.cer` | Certificate file generated if `-UseCertificate` is set |
 
-> **⚠️ Security:** Both files may contain a **client secret in plaintext**. Store them securely and do not commit them to source control. Add `*-config.json` to your `.gitignore`.
+> **⚠️ Security:** All files may contain a **credential in plaintext**. Store them securely and do not commit them to source control. Add `*-config.json` and `*.cer` to your `.gitignore`.
+
+---
+
+## Preference File
+
+To avoid specifying `-CustomAttribute` on every run, create a
+`preferences.json` file **in the same directory as the scripts**.
+This file is listed in `.gitignore` and will never be committed.
+
+### Supported keys
+
+| Key | Applies to | Description |
+|---|---|---|
+| `CustomAttribute` | `New-ScopedMailboxApp.ps1` | Mailbox custom attribute (1–15) used for scope filtering |
+
+### Format
+
+```json
+{
+  "CustomAttribute": "CustomAttribute3"
+}
+```
+
+### Precedence
+
+An explicit `-CustomAttribute` parameter defined at execution overrides any defined `preferences.json` value (if present).
 
 ---
 
@@ -340,6 +367,6 @@ Both provisioning scripts write a JSON configuration file to the output director
 
 ## References
 
-- [Authenticate IMAP/POP/SMTP using OAuth — Microsoft Learn](https://learn.microsoft.com/en-us/exchange/client-developer/legacy-protocols/how-to-authenticate-an-imap-pop-smtp-application-by-using-oauth)
-- [Application access policy for EWS and REST — Microsoft Learn](https://learn.microsoft.com/en-us/graph/auth-limit-mailbox-access)
+- [Authenticate IMAP/POP/SMTP using OAuth – Microsoft Learn](https://learn.microsoft.com/en-us/exchange/client-developer/legacy-protocols/how-to-authenticate-an-imap-pop-smtp-application-by-using-oauth)
+- [Application access policy for EWS and REST – Microsoft Learn](https://learn.microsoft.com/en-us/graph/auth-limit-mailbox-access)
 - [msgraph-sdk-powershell issue #3576](https://github.com/microsoftgraph/msgraph-sdk-powershell/issues/3576)

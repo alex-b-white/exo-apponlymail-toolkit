@@ -2,3 +2,5 @@
 *-config.json
 # Ignore all certificate files
 *.cer
+# Ignore local preference defaults
+preferences.json

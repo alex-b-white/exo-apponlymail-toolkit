@@ -29,7 +29,6 @@
 
     .PARAMETER CustomAttribute
     The mailbox CustomAttribute (1-15) to use for scope filtering.
-    Defaults to CustomAttribute1.
 
     .PARAMETER ExpiryMonths
     Number of months until the certificate or client secret expires. Defaults to 6.
@@ -79,7 +78,7 @@ param (
       "CustomAttribute10", "CustomAttribute11", "CustomAttribute12",
       "CustomAttribute13", "CustomAttribute14", "CustomAttribute15"
   )]
-  [string]$CustomAttribute = "CustomAttribute15",
+  [string]$CustomAttribute,
 
   [Parameter()]
   [ValidateRange(1, 24)]
@@ -92,6 +91,39 @@ param (
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+
+#region ── Preference File ─────────────────────────────────────────────────────
+# Read preferences.json from the script directory (git-ignored).
+# Values in preferences.json act as defaults; explicit parameters always win.
+# See README.md § "Preference File" for the supported keys and format.
+
+$script:PrefsFile = Join-Path $PSScriptRoot "preferences.json"
+
+if (Test-Path $script:PrefsFile) {
+    try {
+        $prefs = Get-Content $script:PrefsFile -Raw -ErrorAction Stop |
+                 ConvertFrom-Json -ErrorAction Stop
+
+        if (-not $PSBoundParameters.ContainsKey('CustomAttribute') `
+                -and -not [string]::IsNullOrWhiteSpace($prefs.CustomAttribute)) {
+            $CustomAttribute = $prefs.CustomAttribute
+        }
+    }
+    catch {
+        Write-Warning "Could not read preferences.json: $_"
+    }
+}
+
+# After applying preferences, enforce that CustomAttribute has a value.
+if ([string]::IsNullOrWhiteSpace($CustomAttribute)) {
+    throw (
+        "No -CustomAttribute value was supplied and no default was found in preferences.json.`n" +
+        "Either pass -CustomAttribute on the command line, or create preferences.json " +
+        "in the script directory.`nSee README.md § 'Preference File' for details."
+    )
+}
+
+#endregion
 
 #region ── Helpers ─────────────────────────────────────────────────────────────
 
@@ -208,7 +240,11 @@ Write-Host "  App Name       : $AppName"
 Write-Host "  Mailboxes      : $($Mailboxes -join ', ')"
 Write-Host "  Credential     : $(if ($UseCertificate) { 'Certificate' } else { 'Client Secret' })"
 Write-Host "  Expiry         : $ExpiryMonths month(s)"
-Write-Host "  Scope Attr     : $CustomAttribute"
+$attrSource = if ((Test-Path $script:PrefsFile) -and
+  -not $PSBoundParameters.ContainsKey('CustomAttribute')) {
+  " (from preferences.json)"
+  } else { "" }
+Write-Host "  Scope Attr     : $CustomAttribute$attrSource"
 Write-Host "  Output Path    : $OutputPath"
 Write-Host ("═" * 70) -ForegroundColor DarkCyan
 

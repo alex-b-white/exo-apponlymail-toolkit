@@ -118,6 +118,17 @@ $script:ExoResourceUrl = "https://outlook.office365.com"
 $script:SmtpHost       = "smtp.office365.com"
 $script:SmtpPort       = 587
 
+# ── Compatible module versions ───────────────────────────────────────────────
+# ExchangeOnlineManagement 3.8+ and Microsoft.Graph 2.25+ cannot coexist in
+# the same PowerShell session due to a WAM/MSAL broker DLL conflict.
+# These versions are the last known-good combination where both load cleanly.
+$script:RequiredExoVersion   = "3.7.0"
+$script:RequiredGraphVersion = "2.24.0"
+
+$script:ExoResourceUrl = "https://outlook.office365.com"
+$script:SmtpHost       = "smtp.office365.com"
+$script:SmtpPort       = 587
+
 #region ── Helpers ─────────────────────────────────────────────────────────────
 
 $script:TestsPassed  = [System.Collections.Generic.List[string]]::new()
@@ -492,7 +503,11 @@ try {
 }
 catch {
     try {
-        Connect-ExchangeOnline -ShowBanner:$false -DisableWAM
+        Import-Module ExchangeOnlineManagement `
+            -RequiredVersion $script:RequiredExoVersion `
+            -ErrorAction Stop
+
+        Connect-ExchangeOnline -ShowBanner:$false -ErrorAction Stop
         $null = Get-OrganizationConfig -ErrorAction Stop
         Write-TestResult -TestName "Exchange Online session" -Result "PASS" `
             -Detail "Connected."

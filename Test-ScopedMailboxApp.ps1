@@ -115,6 +115,16 @@ param (
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+Set-StrictMode -Version Latest
+$ErrorActionPreference = "Stop"
+
+# ── Compatible module versions ───────────────────────────────────────────────
+# ExchangeOnlineManagement 3.8+ and Microsoft.Graph 2.25+ cannot coexist in
+# the same PowerShell session due to a WAM/MSAL broker DLL conflict.
+# These versions are the last known-good combination where both load cleanly.
+$script:RequiredExoVersion   = "3.7.0"
+$script:RequiredGraphVersion = "2.24.0"
+
 #region ── Helpers ─────────────────────────────────────────────────────────────
 # All helper functions must be defined before any code that calls them.
 
@@ -289,21 +299,25 @@ if (-not $SkipApiTests) {
 Write-Section "Connecting to Exchange Online"
 
 try {
-  $null = Get-OrganizationConfig -ErrorAction Stop
-  Write-TestResult -TestName "Exchange Online session" -Result "PASS" `
-  -Detail "Already connected."
-}
-catch {
-  try {
-    Connect-ExchangeOnline -ShowBanner:$false -DisableWAM
     $null = Get-OrganizationConfig -ErrorAction Stop
     Write-TestResult -TestName "Exchange Online session" -Result "PASS" `
-    -Detail "Connected successfully."
-  }
-  catch {
-    Write-TestResult -TestName "Exchange Online session" -Result "FAIL" -Detail $_
-    exit 1
-  }
+    -Detail "Already connected."
+}
+catch {
+    try {
+        Import-Module ExchangeOnlineManagement `
+            -RequiredVersion $script:RequiredExoVersion `
+            -ErrorAction Stop
+
+        Connect-ExchangeOnline -ShowBanner:$false -ErrorAction Stop
+        $null = Get-OrganizationConfig -ErrorAction Stop
+        Write-TestResult -TestName "Exchange Online session" -Result "PASS" `
+        -Detail "Connected successfully."
+    }
+    catch {
+        Write-TestResult -TestName "Exchange Online session" -Result "FAIL" -Detail $_
+        exit 1
+    }
 }
 
 #endregion

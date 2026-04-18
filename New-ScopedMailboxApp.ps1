@@ -471,8 +471,8 @@ Invoke-Step -Name "Service principal" -Action {
   $script:config.SpObjectId = $script:sp.Id
 
   # Log both IDs explicitly so any mismatch is immediately visible
-  Write-Info "App Registration Object ID : $($script:app.Id)   ← do NOT use for EXO"
-  Write-Info "Service Principal Object ID: $($script:sp.Id)    ← use this for EXO"
+  Write-Info "App Registration Object ID : $($script:app.Id)"
+  Write-Info "Service Principal Object ID: $($script:sp.Id)"
   Write-Info "AppId (Client ID)          : $($script:app.AppId)"
 }
 

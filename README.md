@@ -91,6 +91,7 @@ Creates an Entra ID app registration with **Graph API** mailbox access scoped to
 .\New-ScopedMailboxApp.ps1 `
     -AppName   "MailApp-HR" `
     -Mailboxes @("hr@contoso.com", "payroll@contoso.com")
+    -CustomAttribute "CustomAttribute2"
 
 # Certificate credential
 .\New-ScopedMailboxApp.ps1 `
@@ -273,7 +274,7 @@ New-ScopedMailboxApp.ps1
 
 ```powershell
 # 1. Provision
-.\New-ScopedMailboxApp.ps1 -AppName "MailApp-HR" -Mailboxes @("hr@contoso.com")
+.\New-ScopedMailboxApp.ps1 -AppName "MailApp-HR" -Mailboxes @("hr@contoso.com") -CustomAttribute "CustomAttribute2"
 
 # 2. Wait for propagation, then test
 .\Test-ScopedMailboxApp.ps1 `

@@ -108,7 +108,7 @@ Creates an Entra ID app registration with **Graph API** mailbox access scoped to
 | `-Mailboxes` | ✅ | — | Array of mailbox SMTP addresses to scope access to |
 | `-UseCertificate` | ❌ | `$false` | Create a self-signed certificate instead of a client secret |
 | `-CustomAttribute` | ❌ | `CustomAttribute15` | Mailbox custom attribute (1–15) used for scope filtering |
-| `-SecretExpiryMonths` | ❌ | `6` | Client secret validity period in months |
+| `-ExpiryMonths` | ❌ | `12` | Client secret validity period in months (1-24)|
 | `-OutputPath` | ❌ | Current directory | Directory for the config JSON and certificate file |
 
 ---
@@ -207,7 +207,7 @@ Creates an Entra ID app registration for **app-only SMTP OAuth2 sending** via Ex
 | `-AppName` | ✅ | — | Display name for the app registration |
 | `-Mailboxes` | ✅ | — | SMTP addresses of mailboxes the app will send as (shared mailboxes supported) |
 | `-UseCertificate` | ❌ | `$false` | Create a self-signed certificate instead of a client secret |
-| `-SecretExpiryMonths` | ❌ | `12` | Client secret validity period in months |
+| `-ExpiryMonths` | ❌ | `12` | Client secret validity period in months (1-24) |
 | `-OutputPath` | ❌ | Current directory | Directory for the config JSON and certificate file |
 
 ---

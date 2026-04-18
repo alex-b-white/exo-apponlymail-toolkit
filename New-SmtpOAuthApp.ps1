@@ -49,8 +49,8 @@
     .PARAMETER UseCertificate
     Creates a self-signed certificate credential instead of a client secret.
 
-    .PARAMETER SecretExpiryMonths
-    Months until the client secret expires. Defaults to 12.
+    .PARAMETER ExpiryMonths
+    Months until the certificate or client secret expires. Defaults to 12.
 
     .PARAMETER OutputPath
     Directory for the config JSON and certificate file.
@@ -91,7 +91,7 @@ param (
 
     [Parameter()]
     [ValidateRange(1, 24)]
-    [int]$SecretExpiryMonths = 12,
+    [int]$ExpiryMonths = 12,
 
     [Parameter()]
     [ValidateNotNullOrEmpty()]
@@ -214,6 +214,7 @@ Write-Host ("═" * 70) -ForegroundColor DarkCyan
 Write-Host "  App Name    : $AppName"
 Write-Host "  Mailboxes   : $($Mailboxes -join ', ')"
 Write-Host "  Credential  : $(if ($UseCertificate) { 'Certificate' } else { 'Client Secret' })"
+Write-Host "  Expiry      : $ExpiryMonths month(s)"
 Write-Host "  Output Path : $OutputPath"
 Write-Host ("═" * 70) -ForegroundColor DarkCyan
 
@@ -230,6 +231,7 @@ $script:config = [ordered]@{
     SpObjectId       = $null
     ExoSpIdentity    = $null
     CredentialType   = if ($UseCertificate) { "Certificate" } else { "ClientSecret" }
+    ExpiryMonths     = $ExpiryMonths
     ClientSecret     = $null
     CertThumbprint   = $null
     TokenResource    = $script:ExoResourceUrl
@@ -573,7 +575,7 @@ Invoke-Step -Name "Credential creation" -Action {
             -KeySpec           Signature `
             -KeyLength         2048 `
             -HashAlgorithm     SHA256 `
-            -NotAfter          (Get-Date).AddYears(1)
+            -NotAfter          (Get-Date).AddMonths($ExpiryMonths)
 
         $certPath  = Join-Path $OutputPath "$AppName.cer"
         Export-Certificate -Cert $cert -FilePath $certPath | Out-Null
@@ -597,15 +599,15 @@ Invoke-Step -Name "Credential creation" -Action {
             -BodyParameter @{
                 PasswordCredential = @{
                     DisplayName = "$AppName-Secret"
-                    EndDateTime = (Get-Date).AddMonths($SecretExpiryMonths)
+                    EndDateTime = (Get-Date).AddMonths($ExpiryMonths)
                 }
             }
 
         Assert-NotNull -Value $secretResult.SecretText -Label "Client secret"
         $script:config.ClientSecret = $secretResult.SecretText
 
-        $expiry = (Get-Date).AddMonths($SecretExpiryMonths).ToString("yyyy-MM-dd")
-        Write-Info "Client secret created (expires: $expiry)"
+        $expiry = (Get-Date).AddMonths($ExpiryMonths).ToString("yyyy-MM-dd")
+        Write-Info "Client secret created (expires: $((Get-Date).AddMonths($ExpiryMonths).ToString('yyyy-MM-dd')))"
         Write-Warn "Client secret is in the output file — store it securely."
     }
 }

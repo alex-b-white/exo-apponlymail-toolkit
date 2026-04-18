@@ -373,43 +373,6 @@ Invoke-Step -Name "Exchange Online connection" -Action {
 
 #endregion
 
-#region ── Step 2b: Check AllowServicePrincipalSmtpAuth ───────────────────────
-
-Write-Step "Checking org-level SMTP AUTH settings"
-
-Invoke-Step -Name "Org SMTP AUTH check" -ContinueOnError -Action {
-  $transport = Get-TransportConfig -ErrorAction Stop
-
-  # SmtpClientAuthenticationDisabled — must be False for any SMTP AUTH
-  $orgDisabled = $transport.SmtpClientAuthenticationDisabled
-  if ($orgDisabled -eq $true) {
-    Write-Warn ("SmtpClientAuthenticationDisabled = True at org level. " +
-      "SMTP AUTH is globally disabled. " +
-    "Fix: Set-TransportConfig -SmtpClientAuthenticationDisabled `$false")
-  }
-  else {
-    Write-Info "SmtpClientAuthenticationDisabled = $orgDisabled (SMTP AUTH not globally off)."
-  }
-
-  # AllowServicePrincipalSmtpAuth — required for SMTP.SendAsApp client credentials flow.
-  # This property may not exist on all tenants/module versions — handle gracefully.
-  $spSmtp = $transport.PSObject.Properties["AllowServicePrincipalSmtpAuth"]
-  if ($null -eq $spSmtp) {
-    Write-Warn ("AllowServicePrincipalSmtpAuth property not present on this tenant. " +
-    "If SMTP sending fails with 535, contact Microsoft Support.")
-  }
-  elseif ($spSmtp.Value -ne $true) {
-    Write-Warn ("AllowServicePrincipalSmtpAuth = $($spSmtp.Value). " +
-      "This must be True for the SMTP.SendAsApp client credentials flow. " +
-    "Fix: Set-TransportConfig -AllowServicePrincipalSmtpAuth `$true")
-  }
-  else {
-    Write-Info "AllowServicePrincipalSmtpAuth = $($spSmtp.Value)."
-  }
-}
-
-#endregion
-
 #region ── Step 3: Validate Mailboxes ─────────────────────────────────────────
 
 Write-Step "Validating mailbox addresses"
